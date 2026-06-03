@@ -1,40 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Uniform Email Webhook
 
-## Getting Started
+A Next.js webhook handler that listens for Uniform workflow transitions and sends email notifications via Resend.
 
-First, run the development server:
+## How It Works
+
+1. Uniform sends a `workflow.transition` webhook when content moves between workflow stages
+2. This handler checks if the transition matches your configured workflow and stage
+3. If matched, it renders a beautiful HTML email and sends it via Resend
+
+## Setup
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure Environment Variables
+
+Copy the example environment file and fill in your values:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Required variables:
+
+| Variable | Description |
+|----------|-------------|
+| `RESEND_API_KEY` | Your Resend API key |
+| `EMAIL_FROM` | Sender email (must be verified in Resend) |
+| `EMAIL_TO` | Comma-separated recipient list |
+| `NOTIFY_WORKFLOW_ID` | Uniform workflow UUID to watch |
+| `NOTIFY_STAGE_ID` | Stage UUID that triggers notification |
+
+Optional variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `EMAIL_REPLY_TO` | Reply-to address | `EMAIL_FROM` |
+| `UNIFORM_DASHBOARD_BASE_URL` | Dashboard URL | `https://uniform.app` |
+
+### 3. Update Workflow Timeline (Optional)
+
+Edit `pages/api/webhook.ts` to customize the `NOTIFY_WORKFLOW_TIMELINE` array with your workflow's stages:
+
+```typescript
+const NOTIFY_WORKFLOW_TIMELINE: WorkflowStageRef[] = [
+  { id: 'your-editing-stage-id', name: 'Editing' },
+  { id: 'your-approval-stage-id', name: 'Approval' },
+  { id: 'your-approved-stage-id', name: 'Approved' },
+];
+```
+
+### 4. Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The webhook endpoint will be available at `http://localhost:3000/api/webhook`.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Deploy to Vercel
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+### Option 1: Vercel CLI
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+```bash
+npm i -g vercel
+vercel
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Option 2: GitHub Integration
 
-## Learn More
+1. Push to GitHub
+2. Import project in Vercel dashboard
+3. Configure environment variables in Vercel project settings
 
-To learn more about Next.js, take a look at the following resources:
+### Configure Uniform Webhook
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+1. Go to your Uniform project settings
+2. Navigate to Webhooks
+3. Create a new webhook:
+   - **URL**: `https://your-project.vercel.app/api/webhook`
+   - **Event**: `workflow.transition`
+4. Save the webhook
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API Response
 
-## Deploy on Vercel
+### Success (notification sent)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```json
+{
+  "ok": true,
+  "notified": true,
+  "emailId": "resend-email-id",
+  "recipients": 2
+}
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+### Success (no match)
+
+```json
+{
+  "ok": true,
+  "notified": false,
+  "reason": "workflow/stage mismatch"
+}
+```
+
+### Error
+
+```json
+{
+  "error": "Error message",
+  "details": "Additional details"
+}
+```
+
+## Security Note
+
+The current implementation skips Svix signature verification for simplicity. For production use, consider implementing webhook signature verification to ensure requests are authentic.
