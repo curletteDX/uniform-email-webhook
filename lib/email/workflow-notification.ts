@@ -170,7 +170,6 @@ export function renderWorkflowNotificationEmail(
                   ${detailRow('Type', friendlyEntityType, c)}
                   ${detailRow('Entry', safeName, c)}
                   ${input.releaseId ? detailRow('Release', input.releaseId, c, true) : ''}
-                  ${detailRow('Project', input.projectId, c, true)}
                   ${detailRow('Workflow', safeWorkflow, c)}
                 </table>
               </td>
@@ -258,7 +257,6 @@ export function renderWorkflowNotificationEmail(
     `Type:     ${friendlyEntityType}`,
     `Entry:    ${input.entityName}`,
     input.releaseId ? `Release:  ${input.releaseId}` : null,
-    `Project:  ${input.projectId}`,
     '',
     `Triggered by ${initiatorLabel}${input.isApiKey ? ' (API key)' : ''}${
       input.initiatorEmail ? ` <${input.initiatorEmail}>` : ''
