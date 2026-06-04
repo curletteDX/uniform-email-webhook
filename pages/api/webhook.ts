@@ -13,9 +13,10 @@ import { sendEmail } from '../../lib/email/send';
 // "Editing → Approval → Approved" timeline in the email with the active stage
 // highlighted. If the workflow shape changes, update this list.
 const NOTIFY_WORKFLOW_TIMELINE: WorkflowStageRef[] = [
-  { id: '3af40460-327a-4843-b108-90d853910a20', name: 'Editing' },
-  { id: '37aaefca-7673-4bfd-9899-23f13b0ab895', name: 'Approval' },
-  { id: '0a7e5d3b-7aff-44ab-af26-a8355a4eca10', name: 'Approved' },
+  { id: 'bc4f1183-b2e4-456f-9ffa-8645fb321896', name: 'Draft' },
+  { id: '1b2e95ee-4b6d-4e83-aa4f-34d8bd41db7f', name: 'Review' },
+  { id: '1935fb5e-980b-4345-837a-fb18cd7f8fff', name: 'Manager Approval' },
+  { id: '3352bf51-085f-461d-a385-b11a79904d3f', name: 'Published' },
 ];
 
 const log = createLogger('uniform-workflow-notification-webhook');
@@ -87,10 +88,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     'step 2/5 - SKIPPING Svix signature verification (auth disabled on this endpoint - re-enable before production use)'
   );
   let payload: WorkflowTransitionPayload;
+  let rawBody: string;
   try {
-    const rawBody = await readRawBody(req);
+    rawBody = await readRawBody(req);
+    log.log('--- INCOMING PAYLOAD (raw) ---');
+    log.log(rawBody);
+    log.log('--- END INCOMING PAYLOAD ---');
     payload = JSON.parse(rawBody) as WorkflowTransitionPayload;
     log.log('payload parsed (unverified)');
+    log.log('--- PARSED PAYLOAD ---');
+    log.log(JSON.stringify(payload, null, 2));
+    log.log('--- END PARSED PAYLOAD ---');
   } catch (err) {
     log.error('failed to read/parse request body', err);
     res
@@ -148,9 +156,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     isApiKey: (initiator as { is_api_key?: boolean }).is_api_key,
     timestamp: payload.timestamp,
   });
-  log.log(
-    `email ready - subject="${rendered.subject}" (html=${rendered.html.length}B, text=${rendered.text.length}B)`
-  );
+  log.log('--- RENDERED EMAIL ---');
+  log.log(`subject: ${rendered.subject}`);
+  log.log(`html length: ${rendered.html.length} bytes`);
+  log.log(`text length: ${rendered.text.length} bytes`);
+  log.log('--- HTML PREVIEW (first 500 chars) ---');
+  log.log(rendered.html.substring(0, 500));
+  log.log('--- TEXT PREVIEW ---');
+  log.log(rendered.text);
+  log.log('--- END RENDERED EMAIL ---');
 
   log.log(`step 5/5 - sending email via Resend to ${emailTo.length} recipient(s)`);
   try {

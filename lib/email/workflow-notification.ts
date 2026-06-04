@@ -168,7 +168,7 @@ export function renderWorkflowNotificationEmail(
               <td style="padding:16px 32px 8px 32px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${c.cardBorder};border-radius:12px;background-color:#FAFAFB;">
                   ${detailRow('Type', friendlyEntityType, c)}
-                  ${detailRow('Entity ID', input.entityId, c, true)}
+                  ${detailRow('Entry', safeName, c)}
                   ${input.releaseId ? detailRow('Release', input.releaseId, c, true) : ''}
                   ${detailRow('Project', input.projectId, c, true)}
                   ${detailRow('Workflow', safeWorkflow, c)}
@@ -256,7 +256,7 @@ export function renderWorkflowNotificationEmail(
     `Workflow: ${input.workflowName}`,
     `Progress: ${timelineText}`,
     `Type:     ${friendlyEntityType}`,
-    `Entity:   ${input.entityId}`,
+    `Entry:    ${input.entityName}`,
     input.releaseId ? `Release:  ${input.releaseId}` : null,
     `Project:  ${input.projectId}`,
     '',

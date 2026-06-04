@@ -21,14 +21,29 @@ export interface SendEmailResult {
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
   const resend = new Resend(input.apiKey);
 
-  const { data, error } = await resend.emails.send({
+  const emailPayload = {
     from: input.from,
     to: input.to,
     subject: input.subject,
     html: input.html,
     text: input.text,
     replyTo: input.replyTo,
-  });
+  };
+
+  console.log('[resend] --- SENDING TO RESEND API ---');
+  console.log('[resend] from:', input.from);
+  console.log('[resend] to:', input.to);
+  console.log('[resend] subject:', input.subject);
+  console.log('[resend] replyTo:', input.replyTo || '(not set)');
+  console.log('[resend] apiKey prefix:', input.apiKey.substring(0, 10) + '...');
+  console.log('[resend] --- CALLING resend.emails.send() ---');
+
+  const { data, error } = await resend.emails.send(emailPayload);
+
+  console.log('[resend] --- RESEND API RESPONSE ---');
+  console.log('[resend] data:', JSON.stringify(data, null, 2));
+  console.log('[resend] error:', JSON.stringify(error, null, 2));
+  console.log('[resend] --- END RESEND API RESPONSE ---');
 
   if (error) {
     const message =
