@@ -146,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const entityUrl =
     (payload.entity as { url?: string }).url ||
-    buildDashboardUrl(dashboardBaseUrl, payload.project.id, payload.entity.id, payload.entity.releaseId);
+    buildDashboardUrl(dashboardBaseUrl, payload.project.id, payload.entity.id, payload.entity.type, payload.entity.releaseId);
 
   const initiator = payload.initiator ?? {};
 
@@ -202,12 +202,13 @@ function buildDashboardUrl(
   baseUrl: string,
   projectId: string,
   entityId: string,
+  entityType: string,
   releaseId?: string
 ): string {
-  const url = new URL(
-    `/projects/${projectId}/dashboards/canvas/entries/${entityId}`,
-    baseUrl
-  );
+  const path = entityType === 'component'
+    ? `/projects/${projectId}/dashboards/canvas/edit/${entityId}`
+    : `/projects/${projectId}/dashboards/canvas/entries/${entityId}`;
+  const url = new URL(path, baseUrl);
   if (releaseId) {
     url.searchParams.set('release', releaseId);
   }
