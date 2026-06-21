@@ -35,12 +35,12 @@ const env = loadEnv(
     'RESEND_API_KEY',
     'EMAIL_FROM',
     'EMAIL_TO',
-    'NOTIFY_WORKFLOW_ID',
-    'NOTIFY_STAGE_ID',
   ] as const,
   [
     'EMAIL_REPLY_TO',
     'UNIFORM_DASHBOARD_BASE_URL',
+    'NOTIFY_WORKFLOW_ID',
+    'NOTIFY_STAGE_ID',
   ] as const
 );
 
@@ -66,12 +66,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const emailFrom = env.values.EMAIL_FROM!;
   const emailToRaw = env.values.EMAIL_TO!;
   const emailReplyTo = env.values.EMAIL_REPLY_TO || undefined;
-  const notifyWorkflowId = env.values.NOTIFY_WORKFLOW_ID!;
-  const notifyStageId = env.values.NOTIFY_STAGE_ID!;
   const dashboardBaseUrl = (env.values.UNIFORM_DASHBOARD_BASE_URL || 'https://uniform.app').replace(
     /\/$/,
     ''
   );
+
+  // Read workflow/stage config from headers (preferred) or fall back to env vars
+  const notifyWorkflowId =
+    (req.headers['x-notify-workflow-id'] as string) ||
+    env.values.NOTIFY_WORKFLOW_ID;
+  const notifyStageId =
+    (req.headers['x-notify-stage-id'] as string) ||
+    env.values.NOTIFY_STAGE_ID;
+
+  if (!notifyWorkflowId || !notifyStageId) {
+    log.error('Missing workflow/stage config - set X-Notify-Workflow-Id and X-Notify-Stage-Id headers or env vars');
+    res.status(503).json({ error: 'Missing workflow/stage configuration' });
+    return;
+  }
 
   const emailTo = emailToRaw
     .split(',')
@@ -83,6 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
   log.log(`env ok - will notify ${emailTo.length} recipient(s) (${emailTo.join(', ')})`);
+  log.log(`config source: workflow=${req.headers['x-notify-workflow-id'] ? 'header' : 'env'}, stage=${req.headers['x-notify-stage-id'] ? 'header' : 'env'}`);
 
   log.warn(
     'step 2/5 - SKIPPING Svix signature verification (auth disabled on this endpoint - re-enable before production use)'
