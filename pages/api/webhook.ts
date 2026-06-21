@@ -13,10 +13,9 @@ import { sendEmail } from '../../lib/email/send';
 // "Editing → Approval → Approved" timeline in the email with the active stage
 // highlighted. If the workflow shape changes, update this list.
 const NOTIFY_WORKFLOW_TIMELINE: WorkflowStageRef[] = [
-  { id: 'bc4f1183-b2e4-456f-9ffa-8645fb321896', name: 'Draft' },
-  { id: '1b2e95ee-4b6d-4e83-aa4f-34d8bd41db7f', name: 'Review' },
-  { id: '1935fb5e-980b-4345-837a-fb18cd7f8fff', name: 'Manager Approval' },
-  { id: '3352bf51-085f-461d-a385-b11a79904d3f', name: 'Published' },
+  { id: 'bc52e71c-7a16-4a84-8ca5-5ec680f96c4b', name: 'Editing' },
+  { id: 'd87d564e-e07f-4a02-a0f5-e57ffa59b7f4', name: 'Approval' },
+  { id: '1f2e0a5a-531e-47a0-8788-e8924a7cfbea', name: 'Approved' },
 ];
 
 const log = createLogger('uniform-workflow-notification-webhook');
